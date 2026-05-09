@@ -159,14 +159,14 @@ export default function OverviewDashboard({
       {/* ── 4. Daily Activity (full width) ── */}
       <DailyUsageChart data={stats?.dailyStats ?? null} costData={stats?.dailyCosts ?? null} loading={statsLoading} />
 
-      {/* ── 5. Rankings (2-column) ── */}
+      {/* ── 5. Cost Breakdown (4.3) — placed near Daily Activity for cost flow continuity ── */}
+      <CostBreakdown />
+
+      {/* ── 6. Rankings (2-column) ── */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
         <WeeklyTop5 data={stats?.weeklyTop5 ?? null} loading={statsLoading} />
         <ToolTop5 data={stats?.toolTop5 ?? null} loading={statsLoading} />
       </div>
-
-      {/* ── 6. Cost Breakdown (4.3) ── */}
-      <CostBreakdown />
 
       {/* ── Scan time ── */}
       <div style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>
