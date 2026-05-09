@@ -1,0 +1,9 @@
+{
+  "name": "claude-code-dashboard",
+  "version": "1.0.0",
+  "description": "Local web dashboard for Claude Code — monitor rate limits, manage agents/skills/hooks/MCP servers, browse session history, track daily activity and usage rankings",
+  "author": {
+    "name": "developer-hasm",
+    "url": "https://github.com/developer-hasm"
+  }
+}
