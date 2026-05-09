@@ -2,9 +2,13 @@
   "name": "claude-dashboard",
   "version": "1.0.0",
   "private": true,
+  "engines": {
+    "node": ">=18.18.0"
+  },
   "scripts": {
     "dev": "next dev --port 19280 --hostname 127.0.0.1",
-    "build": "next build && cp -r .next/static .next/standalone/.next/static",
+    "ensure-sqlite-binding": "node -e \"process.exit(require('fs').existsSync('node_modules/better-sqlite3/build/Release/better_sqlite3.node')?0:1)\" || npm rebuild better-sqlite3",
+    "build": "npm run ensure-sqlite-binding && next build && node scripts/postbuild.mjs",
     "start": "node server.mjs",
     "test": "npx playwright test",
     "test:e2e": "npx playwright test --reporter=list"

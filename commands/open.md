@@ -18,9 +18,19 @@ The plugin's install path is available as `${CLAUDE_PLUGIN_ROOT}`. The server it
 ## Cold path (server not running)
 
 2. **Build if missing** (one-time, ~1 minute):
+   - Track whether you ran the build. Call this `BUILT_NOW`.
    - If `${CLAUDE_PLUGIN_ROOT}/.next/standalone/server.js` does NOT exist:
      - `cd "${CLAUDE_PLUGIN_ROOT}" && npm install --no-audit --no-fund`
+     - `cd "${CLAUDE_PLUGIN_ROOT}" && npm run build` (the project's own `npm run build` ensures the better-sqlite3 binding via `ensure-sqlite-binding` and `scripts/postbuild.mjs` — exit code is trustworthy)
+     - Set `BUILT_NOW = true`.
+   - **Defensive check — only when `BUILT_NOW` is FALSE** (i.e. we're reusing an existing build that may predate the postbuild script). The fresh-build path's exit code is already authoritative; re-checking adds a wasted `node -e` subprocess on every cold start. Use a cross-platform existence check (no shell `~` expansion):
+     ```
+     node -e "process.exit(require('fs').existsSync(process.argv[1])?0:1)" "${CLAUDE_PLUGIN_ROOT}/.next/standalone/node_modules/better-sqlite3/build/Release/better_sqlite3.node"
+     ```
+     If this exits non-zero on the reused-build path, the bundle is stale (built before this project's postbuild script existed, or has been partially deleted). Recover by re-running:
+     - `cd "${CLAUDE_PLUGIN_ROOT}" && npm rebuild better-sqlite3`
      - `cd "${CLAUDE_PLUGIN_ROOT}" && npm run build`
+   - **If `npm run build` itself exits non-zero in either path, STOP**: print the error and the log file path (`${CLAUDE_PLUGIN_ROOT}/dashboard.log`) and do NOT proceed to step 3. The server would technically start, but every DB-backed API would throw `Could not locate the bindings file`, leaving the dashboard silently empty.
 
 3. **Run the server** (do NOT pass `--no-open`):
    - On Windows: `powershell -Command "Start-Process -FilePath 'node' -ArgumentList '${CLAUDE_PLUGIN_ROOT}/server.mjs' -WindowStyle Hidden -RedirectStandardOutput '${CLAUDE_PLUGIN_ROOT}/dashboard.log' -RedirectStandardError '${CLAUDE_PLUGIN_ROOT}/dashboard.err'"`
