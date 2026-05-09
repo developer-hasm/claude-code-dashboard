@@ -1,0 +1,56 @@
+name: Daily Ops Report
+
+on:
+  schedule:
+    # 14:00 UTC = 23:00 KST (Asia/Seoul, UTC+9)
+    - cron: '0 14 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: read
+  pull-requests: read
+  metadata: read
+
+concurrency:
+  group: daily-ops
+  cancel-in-progress: false
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Generate daily report
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          OWNER: ${{ github.repository_owner }}
+        run: node .github/scripts/daily-report.mjs
+
+      - name: Commit report
+        run: |
+          if [[ -n "$(git status --porcelain reports/)" ]]; then
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git add reports/
+            git commit -m "chore(reports): daily ops $(date -u +%Y-%m-%d)"
+            git push
+          else
+            echo "No changes to commit"
+          fi
+
+      - name: Add report to job summary
+        if: always()
+        run: |
+          today=$(date -u +%Y-%m-%d)
+          if [[ -f "reports/${today}.md" ]]; then
+            cat "reports/${today}.md" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "No report generated today." >> "$GITHUB_STEP_SUMMARY"
+          fi
