@@ -69,6 +69,16 @@ Inside Claude Code, run:
 /plugin install claude-code-dashboard@developer-hasm
 ```
 
+Then use these slash commands inside Claude Code:
+
+| Command | Description |
+|---------|-------------|
+| `/claude-code-dashboard:start` | Build (if needed) and start the dashboard server |
+| `/claude-code-dashboard:stop` | Stop the running dashboard server |
+| `/claude-code-dashboard:status` | Show running status, PID, port, uptime |
+
+The first `start` will run `npm install` and `npm run build` in the plugin's install directory (one-time, ~30s), then launch the server and print the URL.
+
 ### Install from source
 
 ```bash
