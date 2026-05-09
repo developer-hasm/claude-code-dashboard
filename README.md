@@ -6,6 +6,22 @@
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Next.js](https://img.shields.io/badge/Next.js-15-black)
 ![React](https://img.shields.io/badge/React-19-61dafb)
+![i18n](https://img.shields.io/badge/i18n-EN%20%2F%20KO-purple)
+
+![Overview](docs/screenshots/01-overview.png)
+
+## Screenshots
+
+| Cost Breakdown by project / agent / skill | Full-text session search |
+|--------------------------------------------|---------------------------|
+| ![Cost Breakdown](docs/screenshots/02-cost-breakdown.png) | ![Session Search](docs/screenshots/03-session-search.png) |
+
+<details>
+<summary>More — MCP servers and other category pages</summary>
+
+![MCP Servers](docs/screenshots/04-mcp.png)
+
+</details>
 
 ## Features
 
