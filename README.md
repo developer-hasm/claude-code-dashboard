@@ -60,7 +60,16 @@ Delete shows dependency warnings (bidirectional dependents/dependencies).
 - Node.js ≥ 20
 - [Claude Code CLI](https://docs.claude.com/en/docs/claude-code) installed
 
-### Install & Run
+### Install via Claude Code Plugin Marketplace (recommended)
+
+Inside Claude Code, run:
+
+```
+/plugin marketplace add developer-hasm/claude-code-dashboard
+/plugin install claude-code-dashboard@developer-hasm
+```
+
+### Install from source
 
 ```bash
 git clone https://github.com/developer-hasm/claude-code-dashboard.git
