@@ -99,7 +99,39 @@ const MIGRATIONS: Migration[] = [
       CREATE INDEX IF NOT EXISTS idx_user_messages_timestamp ON user_messages(timestamp);
     `,
   },
-  // Future migrations go here: { version: 2, sql: 'ALTER TABLE ...' },
+  {
+    version: 2,
+    sql: `
+      -- Full-text search over user message previews.
+      -- Standalone FTS5 table (own content) keeps triggers simple and avoids
+      -- coupling to user_messages schema changes.
+      CREATE VIRTUAL TABLE IF NOT EXISTS user_messages_fts USING fts5(
+        content,
+        tokenize='porter unicode61'
+      );
+
+      -- Keep FTS in sync with user_messages on insert/delete.
+      -- (user_messages rows are immutable in current ingestion path, so
+      -- no UPDATE trigger is needed.)
+      CREATE TRIGGER IF NOT EXISTS user_messages_after_insert
+        AFTER INSERT ON user_messages
+      BEGIN
+        INSERT INTO user_messages_fts(rowid, content)
+        VALUES (new.id, COALESCE(new.content_preview, ''));
+      END;
+
+      CREATE TRIGGER IF NOT EXISTS user_messages_after_delete
+        AFTER DELETE ON user_messages
+      BEGIN
+        DELETE FROM user_messages_fts WHERE rowid = old.id;
+      END;
+
+      -- Backfill any rows that existed before this migration.
+      INSERT INTO user_messages_fts(rowid, content)
+        SELECT id, COALESCE(content_preview, '') FROM user_messages
+        WHERE id NOT IN (SELECT rowid FROM user_messages_fts);
+    `,
+  },
 ];
 
 function runMigrations(db: Database.Database): void {
@@ -421,6 +453,104 @@ export function getDailyCosts(days: number): DailyCostRow[] {
        ORDER BY date ASC`,
     )
     .all(days) as DailyCostRow[];
+}
+
+// ── Cost Breakdown (4.3) ──────────────────────────────────────────────────
+
+export interface CostBreakdownRow {
+  name: string;
+  totalCost: number;
+  usageCount: number;
+}
+
+export type CostDimension = 'agent' | 'skill' | 'cwd';
+
+/**
+ * Top-N rows by total cost, grouped by the requested dimension.
+ * Window defaults to 30 days.
+ */
+export function getCostBreakdown(
+  dimension: CostDimension,
+  days = 30,
+  limit = 10,
+): CostBreakdownRow[] {
+  const db = getDb();
+
+  const column =
+    dimension === 'agent' ? 'agent_name'
+      : dimension === 'skill' ? 'skill_name'
+        : 'cwd';
+
+  // Note: `column` is constructed from a fixed enum, never user input —
+  // safe to interpolate. Days/limit go through bind parameters.
+  return db
+    .prepare(
+      `SELECT ${column} as name,
+              SUM(cost_usd) as totalCost,
+              COUNT(*) as usageCount
+       FROM turns
+       WHERE ${column} IS NOT NULL
+         AND timestamp >= datetime('now', '-' || ? || ' days')
+       GROUP BY ${column}
+       ORDER BY totalCost DESC
+       LIMIT ?`,
+    )
+    .all(days, limit) as CostBreakdownRow[];
+}
+
+// ── Session Full-Text Search (4.4) ────────────────────────────────────────
+
+export interface SessionSearchHit {
+  sessionId: string;
+  matchedTimestamp: string;
+  snippet: string;        // FTS5 snippet() with <mark> tags
+  rank: number;           // FTS5 BM25 score (lower = better)
+}
+
+/**
+ * Full-text search across user message previews.
+ *
+ * `query` is passed straight to FTS5 — it accepts MATCH syntax like
+ * `"phrase"`, `term1 OR term2`, `prefix*`. Empty/whitespace returns [].
+ */
+export function searchUserMessages(
+  query: string,
+  limit = 50,
+): SessionSearchHit[] {
+  const trimmed = query.trim();
+  if (!trimmed) return [];
+
+  const db = getDb();
+  try {
+    return db
+      .prepare(
+        `SELECT um.session_id as sessionId,
+                um.timestamp as matchedTimestamp,
+                snippet(user_messages_fts, 0, '<mark>', '</mark>', '…', 16) as snippet,
+                bm25(user_messages_fts) as rank
+         FROM user_messages_fts
+         JOIN user_messages um ON um.id = user_messages_fts.rowid
+         WHERE user_messages_fts MATCH ?
+         ORDER BY rank
+         LIMIT ?`,
+      )
+      .all(trimmed, limit) as SessionSearchHit[];
+  } catch {
+    // Malformed FTS5 query (e.g. unbalanced quotes) — fall back to LIKE.
+    const like = `%${trimmed.replace(/[%_]/g, m => '\\' + m)}%`;
+    return db
+      .prepare(
+        `SELECT session_id as sessionId,
+                timestamp as matchedTimestamp,
+                substr(content_preview, 1, 200) as snippet,
+                0 as rank
+         FROM user_messages
+         WHERE content_preview LIKE ? ESCAPE '\\'
+         ORDER BY timestamp DESC
+         LIMIT ?`,
+      )
+      .all(like, limit) as SessionSearchHit[];
+  }
 }
 
 // ── Types ────────────────────────────────────────────────────────────────

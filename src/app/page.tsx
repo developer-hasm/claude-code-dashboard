@@ -12,6 +12,7 @@ import { EmptyState } from '@/components/EmptyState';
 import ItemCard from '@/components/ItemCard';
 import DeleteModal from '@/components/DeleteModal';
 import SessionList from '@/components/SessionList';
+import SessionFullTextSearch from '@/components/SessionFullTextSearch';
 import OverviewDashboard from '@/components/OverviewDashboard';
 import ExportModal from '@/components/ExportModal';
 import ImportModal from '@/components/ImportModal';
@@ -340,6 +341,7 @@ export default function DashboardPage() {
                 totalCount={counts['session' as ItemCategory] ?? 0}
                 filteredCount={filteredItems.length}
               />
+              <SessionFullTextSearch />
               <SessionList
                 items={filteredItems}
                 csrfToken={csrfToken}

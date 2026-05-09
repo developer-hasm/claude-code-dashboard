@@ -8,6 +8,7 @@ import DailyUsageChart from './DailyUsageChart';
 import TokenUsageDonut from './TokenUsageDonut';
 import WeeklyTop5 from './WeeklyTop5';
 import ToolTop5 from './ToolTop5';
+import CostBreakdown from './CostBreakdown';
 import UnusedItems from './UnusedItems';
 import UsageMeter from './UsageMeter';
 import WorkspaceRecommendation from './WorkspaceRecommendation';
@@ -163,6 +164,9 @@ export default function OverviewDashboard({
         <WeeklyTop5 data={stats?.weeklyTop5 ?? null} loading={statsLoading} />
         <ToolTop5 data={stats?.toolTop5 ?? null} loading={statsLoading} />
       </div>
+
+      {/* ── 6. Cost Breakdown (4.3) ── */}
+      <CostBreakdown />
 
       {/* ── Scan time ── */}
       <div style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>
