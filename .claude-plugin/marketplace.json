@@ -6,14 +6,14 @@
   },
   "metadata": {
     "description": "developer-hasm's Claude Code plugin marketplace",
-    "version": "1.0.0"
+    "version": "1.1.0"
   },
   "plugins": [
     {
       "name": "claude-code-dashboard",
       "source": "./",
       "description": "Local web dashboard for Claude Code — monitor rate limits, manage agents/skills/hooks/MCP servers, browse session history, track daily activity and usage rankings",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "author": {
         "name": "developer-hasm",
         "url": "https://github.com/developer-hasm"
