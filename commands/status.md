@@ -15,6 +15,6 @@ Steps:
 
 3. **Report a table** with these columns: `scope` (global/project), `port`, `pid`, `startedAt`, `uptime` (formatted: `1h 23m`), `url`.
 
-4. **If no live servers found**, print "No dashboard running. Use `/claude-code-dashboard:start` to launch."
+4. **If no live servers found**, print "No dashboard running. Use `/claude-code-dashboard:open` to launch."
 
 Keep the output concise — under 10 lines.
