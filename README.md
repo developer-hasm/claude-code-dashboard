@@ -73,11 +73,26 @@ Then use these slash commands inside Claude Code:
 
 | Command | Description |
 |---------|-------------|
-| `/claude-code-dashboard:open` | Open the dashboard in the browser (starts the server if not running). Idempotent. |
+| `/claude-code-dashboard:open` | Open the dashboard in the browser (starts the server if not running). Idempotent. On cold start (server not already up) it also checks for new releases — best-effort, silent on network failure. |
 | `/claude-code-dashboard:stop` | Stop the running dashboard server |
 | `/claude-code-dashboard:status` | Show running status, PID, port, uptime |
+| `/claude-code-dashboard:update` | Pull the latest released version via the marketplace, stop the running server, and print restart instructions |
 
 The first `:open` will run `npm install` and `npm run build` in the plugin's install directory (one-time, ~1 minute), then launch the server and open your browser. Subsequent invocations just refocus the existing dashboard.
+
+### Updating
+
+On cold start, `:open` prints a notice when a newer release is available (the exact wording is in `commands/open.md`):
+
+```
+📦 Update available: 1.0.0 → 1.1.0
+   To update, run /claude-code-dashboard:update
+   (this dashboard will keep working on the current version until you do)
+```
+
+The check only runs on cold start (when `:open` actually launches the server) and is best-effort — silent on network failure. When the server is already running, `:open` skips the version check entirely to keep re-open sub-second.
+
+`:update` runs `claude plugin marketplace update` + `claude plugin update`, stops the current server gracefully (with a forced fallback after 2s), and tells you to restart Claude Code so the new slash commands and install path are picked up.
 
 ### Install from source
 
