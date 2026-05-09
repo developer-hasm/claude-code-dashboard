@@ -25,6 +25,9 @@ test-results/
 playwright-report/
 e2e/*.png
 
+# Intermediate demo frames (the final GIF lives in docs/screenshots/)
+docs/.demo-frames/
+
 # IDE
 .vscode/
 .idea/

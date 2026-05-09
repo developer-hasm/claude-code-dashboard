@@ -8,9 +8,11 @@
 ![React](https://img.shields.io/badge/React-19-61dafb)
 ![i18n](https://img.shields.io/badge/i18n-EN%20%2F%20KO-purple)
 
-![Overview](docs/screenshots/01-overview.png)
+![Demo](docs/screenshots/demo.gif)
 
 ## Screenshots
+
+![Overview](docs/screenshots/01-overview.png)
 
 | Cost Breakdown by project / agent / skill | Full-text session search |
 |--------------------------------------------|---------------------------|
